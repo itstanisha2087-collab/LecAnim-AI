@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LecAnim AI - Transform Lectures into 3D</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono&display=swap" rel="stylesheet">
+  </head>
+  <body class="bg-gray-50 text-gray-900 font-sans h-screen overflow-hidden">
+    <div id="app" class="flex h-full w-full">
+      <!-- Sidebar Navigation -->
+      <nav class="w-16 md:w-[300px] border-r border-black/5 sidebar bg-white flex flex-col items-center md:items-stretch py-6 px-6 z-20">
+        <div class="mb-10 flex items-center gap-3 px-2">
+          <div class="w-8 h-8 bg-[#5A7D7C] rounded-lg flex items-center justify-center text-white">
+            <i data-lucide="sparkles" class="w-5 h-5"></i>
+          </div>
+          <h1 class="font-bold text-xl hidden md:block tracking-tight">LecAnim AI</h1>
+        </div>
+
+        <div class="nav-section mb-8">
+          <span class="section-label hidden md:block">Modules</span>
+          <div class="flex flex-col gap-1 w-full">
+            <button data-tab="upload" class="nav-item active flex items-center gap-3 p-3 rounded-xl transition-all hover:bg-gray-50 group">
+              <i data-lucide="upload-cloud" class="w-5 h-5 text-[#636E72] group-[.active]:text-[#5A7D7C]"></i>
+              <span class="font-medium hidden md:block text-[#636E72] group-[.active]:text-[#5A7D7C]">Upload PDF</span>
+            </button>
+            <button data-tab="animation" class="nav-item flex items-center gap-3 p-3 rounded-xl transition-all hover:bg-gray-50 group">
+              <i data-lucide="box" class="w-5 h-5 text-[#636E72] group-[.active]:text-[#5A7D7C]"></i>
+              <span class="font-medium hidden md:block text-[#636E72] group-[.active]:text-[#5A7D7C]">3D Scene</span>
+            </button>
+            <button data-tab="flashcards" class="nav-item flex items-center gap-3 p-3 rounded-xl transition-all hover:bg-gray-50 group">
+              <i data-lucide="layers" class="w-5 h-5 text-[#636E72] group-[.active]:text-[#5A7D7C]"></i>
+              <span class="font-medium hidden md:block text-[#636E72] group-[.active]:text-[#5A7D7C]">Flashcards</span>
+            </button>
+            <button data-tab="quiz" class="nav-item flex items-center gap-3 p-3 rounded-xl transition-all hover:bg-gray-50 group">
+              <i data-lucide="check-square" class="w-5 h-5 text-[#636E72] group-[.active]:text-[#5A7D7C]"></i>
+              <span class="font-medium hidden md:block text-[#636E72] group-[.active]:text-[#5A7D7C]">Quiz</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="flex-1 flex flex-col min-h-0 hidden md:flex">
+          <span class="section-label">Doubt Solver</span>
+          <div id="chat-sidebar" class="chat-container">
+            <div id="chat-messages" class="flex-1 overflow-auto p-1 space-y-3 mb-3">
+              <div class="chat-bubble bot">
+                <p>Hi! I'm your study assistant. Once you upload a lecture, you can ask me anything about it.</p>
+              </div>
+            </div>
+
+            <div class="relative">
+                <textarea id="chat-input" placeholder="Ask a question..." class="w-full chat-input pr-10 min-h-[40px] max-h-32 resize-none py-2" rows="1"></textarea>
+                <button id="send-chat" class="absolute right-1 bottom-1 w-7 h-7 bg-[#5A7D7C] text-white rounded-lg flex items-center justify-center hover:opacity-90 transition-opacity">
+                    <i data-lucide="arrow-up" class="w-4 h-4"></i>
+                </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-6 pt-6 border-t border-gray-100 w-full hidden md:block">
+          <div class="px-2">
+            <p class="text-[10px] text-gray-400 uppercase font-semibold tracking-wider">Storage</p>
+            <div class="mt-2 h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
+              <div class="h-full bg-[#5A7D7C] w-1/3"></div>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      <!-- Main Stage -->
+      <main class="flex-1 overflow-hidden relative flex flex-col p-6 gap-6">
+        <!-- Header Strip -->
+        <header class="h-16 flex items-center justify-between z-10">
+          <div id="breadcrumb" class="bg-white px-5 py-3 rounded-full shadow-[0_2px_10px_rgba(0,0,0,0.03)] text-[13px] font-medium text-[#636E72] flex items-center gap-2">
+            <div class="w-2.5 h-2.5 rounded-full bg-[#E67E22]"></div>
+            Session: <span id="current-filename" class="text-[#2D3436] font-bold">No PDF Loaded</span>
+          </div>
+          <div class="flex items-center gap-4">
+            <div id="processing-status" class="hidden">
+              <div class="flex items-center gap-2 px-3 py-1 bg-[#E0E7E6] text-[#5A7D7C] rounded-full text-xs font-semibold animate-pulse">
+                <i data-lucide="loader-2" class="w-3 h-3 animate-spin"></i>
+                AI is processing...
+              </div>
+            </div>
+            <div class="text-[#5A7D7C] text-[12px] font-bold cursor-pointer hover:underline hidden md:block">Switch Scene</div>
+            <button class="p-2 hover:bg-white rounded-full text-[#636E72] transition-colors">
+              <i data-lucide="settings" class="w-5 h-5"></i>
+            </button>
+          </div>
+        </header>
+
+        <!-- Content Area -->
+        <div id="content-container" class="flex-1 relative overflow-auto rounded-[16px]">
+          
+          <!-- Upload Tab -->
+          <section id="tab-upload" class="tab-content flex flex-col items-center justify-center h-full">
+            <div class="max-w-xl w-full text-center">
+              <h2 class="text-3xl font-bold text-[#2D3436] mb-4">Start your learning journey.</h2>
+              <p class="text-[#636E72] mb-8">Upload your lecture PDF and LecAnim AI will transform it into an interactive 3D environment.</p>
+              
+              <div id="drop-zone" class="border-2 border-dashed border-[#EDEDE8] rounded-[32px] p-12 bg-white transition-all hover:border-[#5A7D7C] hover:bg-[#FAFBFA] group cursor-pointer shadow-sm">
+                <input type="file" id="file-input" class="hidden" accept="application/pdf" />
+                
+                <!-- Default Content -->
+                <div id="drop-zone-default" class="flex flex-col items-center">
+                  <div class="w-20 h-20 bg-[#E0E7E6] text-[#5A7D7C] rounded-2xl flex items-center justify-center mb-6">
+                    <i data-lucide="file-up" class="w-10 h-10"></i>
+                  </div>
+                  <h3 class="text-xl font-semibold mb-2 text-[#2D3436]">Drop your PDF here</h3>
+                  <p class="text-[#636E72] text-sm">Or click to browse from your computer</p>
+                </div>
+
+                <!-- Loading Content -->
+                <div id="drop-zone-loading" class="hidden flex flex-col items-center animate-in fade-in duration-500">
+                  <div class="w-20 h-20 bg-[#E0E7E6] text-[#5A7D7C] rounded-2xl flex items-center justify-center mb-6">
+                    <i data-lucide="loader-2" class="w-10 h-10 animate-spin"></i>
+                  </div>
+                  <h3 class="text-xl font-semibold mb-2 text-[#2D3436]">Analyzing Document</h3>
+                  <p class="text-[#636E72] text-sm">LecAnim AI is extracting concepts...</p>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Animation Tab -->
+          <section id="tab-animation" class="tab-content hidden h-full flex flex-col">
+            <div class="flex-1 bg-[#EAEBE6] rounded-[16px] overflow-hidden relative shadow-[inset_0_0_40px_rgba(0,0,0,0.05)]">
+              <div id="canvas-container" class="w-full h-full"></div>
+              <div class="viewport-label">CARTOON MODE: <span id="scene-title">Waiting for data...</span></div>
+              
+              <!-- Narrative Caption -->
+              <div class="absolute top-16 left-1/2 -translate-x-1/2 w-full max-w-lg px-6 z-10">
+                <div class="bg-white/80 backdrop-blur-md p-4 rounded-2xl border border-white/50 shadow-xl text-center">
+                   <p class="text-[#2D3436] font-medium text-sm leading-relaxed" id="scene-description">Upload a lecture to start the show!</p>
+                </div>
+              </div>
+
+              <!-- Playback Controls -->
+              <div class="absolute bottom-5 left-5 right-5 flex flex-col gap-4 pointer-events-none">
+                <div class="flex justify-between items-end">
+                    <div class="flex gap-2 pointer-events-auto">
+                        <button id="restart-animation" class="w-10 h-10 bg-white/70 backdrop-blur-md rounded-full flex items-center justify-center text-[#5A7D7C] border border-white/30 transition-all hover:bg-white">
+                            <i data-lucide="rotate-ccw" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                    <div class="flex gap-2 pointer-events-auto">
+                        <button id="prev-scene" class="px-4 py-2 bg-white/70 backdrop-blur-md rounded-xl text-[12px] font-bold text-[#5A7D7C] border border-white/30 hover:bg-white">Prev</button>
+                        <button id="play-pause" class="w-12 h-12 bg-[#5A7D7C] text-white rounded-full flex items-center justify-center shadow-lg hover:scale-105 transition-transform">
+                            <i data-lucide="play" id="play-icon" class="w-6 h-6 ml-1"></i>
+                            <i data-lucide="pause" id="pause-icon" class="w-6 h-6 hidden"></i>
+                        </button>
+                        <button id="next-scene" class="px-4 py-2 bg-white/70 backdrop-blur-md rounded-xl text-[12px] font-bold text-[#5A7D7C] border border-white/30 hover:bg-white">Next</button>
+                    </div>
+                    <div class="flex gap-2 pointer-events-auto">
+                        <button class="w-10 h-10 bg-white/70 backdrop-blur-md rounded-full flex items-center justify-center text-[#5A7D7C] border border-white/30 transition-all hover:bg-white">
+                            <i data-lucide="maximize" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Progress Bar -->
+                <div class="w-full bg-white/30 backdrop-blur-sm h-2 rounded-full overflow-hidden pointer-events-auto cursor-pointer border border-white/10 group">
+                    <div id="animation-progress" class="h-full bg-[#5A7D7C] w-0 transition-all duration-300 relative group-hover:bg-[#E67E22]"></div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="mt-6 flex flex-col md:flex-row gap-6">
+              <div class="flex-1 bg-white p-5 rounded-[16px] shadow-[0_4px_15px_rgba(0,0,0,0.04)]">
+                <span class="section-label">Generated Highlights</span>
+                <div class="flex gap-4 mt-3" id="highlights-summary">
+                  <div class="flex-1 bg-[#E0E7E6] p-4 rounded-[12px] text-center">
+                    <p class="text-[13px] font-bold text-[#5A7D7C]">G Constant</p>
+                  </div>
+                   <div class="flex-1 bg-[#E0E7E6] p-4 rounded-[12px] text-center">
+                    <p class="text-[13px] font-bold text-[#5A7D7C]">Inverse Square</p>
+                  </div>
+                </div>
+              </div>
+              <div class="w-full md:w-72 bg-white p-5 rounded-[16px] shadow-[0_4px_15px_rgba(0,0,0,0.04)]">
+                <span class="section-label">Scene Quiz</span>
+                <div class="quiz-preview mt-3">
+                   <div class="text-[13px] leading-tight">
+                        <strong>Quick Task</strong><br>
+                        5 items ready
+                    </div>
+                    <button class="bg-white text-[#5A7D7C] px-3 py-1.5 rounded-[8px] text-[12px] font-bold hover:bg-opacity-90 transition-opacity" onclick="document.querySelector('[data-tab=\'quiz\']').click()">Start</button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Flashcards Tab -->
+          <section id="tab-flashcards" class="tab-content hidden h-full flex flex-col">
+            <div class="mb-10 text-center">
+              <h2 class="text-3xl font-bold mb-2">Study Smart</h2>
+              <p class="text-[#636E72]">Master your subject with AI-generated flashcards</p>
+            </div>
+            
+            <div class="flex-1 flex flex-col items-center justify-center">
+                <div id="flashcard-container" class="relative w-full max-w-xl aspect-[1.6/1] perspective-1000 group">
+                    <div id="flashcard" class="w-full h-full bg-white rounded-[32px] border border-[#EDEDE8] shadow-xl shadow-gray-200/30 flex flex-col items-center justify-center p-12 text-center cursor-pointer transition-transform duration-700 preserve-3d">
+                        <div class="flashcard-face absolute inset-0 flex flex-col items-center justify-center p-12 backface-hidden">
+                            <span class="text-[#5A7D7C] font-bold uppercase tracking-widest text-[10px] mb-4">Question</span>
+                            <h3 id="card-question" class="text-2xl font-semibold leading-tight text-[#2D3436]">Your lecture concepts will appear here as questions.</h3>
+                            <p class="mt-8 text-xs text-[#636E72] font-medium">Click to see answer</p>
+                        </div>
+                        <div class="flashcard-face absolute inset-0 flex flex-col items-center justify-center p-12 backface-hidden rotate-y-180 bg-[#FAFBFA]">
+                            <span class="text-[#5A7D7C] font-bold uppercase tracking-widest text-[10px] mb-4">Answer</span>
+                            <p id="card-answer" class="text-lg leading-relaxed text-[#636E72]">Detailed explanations will appear on the back of the card.</p>
+                            <div class="mt-8 flex gap-4">
+                                <button class="px-4 py-2 bg-white hover:bg-red-50 text-red-600 rounded-xl text-xs font-semibold transition-colors border">Still learning</button>
+                                <button class="px-4 py-2 bg-[#5A7D7C] text-white rounded-xl text-xs font-semibold transition-colors">Mastered</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-12 flex items-center gap-8">
+                    <button id="prev-card" class="w-14 h-14 bg-white border border-[#EDEDE8] rounded-full shadow-md flex items-center justify-center text-[#636E72] hover:text-[#5A7D7C] transition-all">
+                        <i data-lucide="chevron-left" class="w-6 h-6"></i>
+                    </button>
+                    <div id="card-progress" class="text-sm font-medium text-[#636E72]">
+                        <span id="current-card-index">0</span> / <span id="total-cards">0</span>
+                    </div>
+                    <button id="next-card" class="w-14 h-14 bg-white border border-[#EDEDE8] rounded-full shadow-md flex items-center justify-center text-[#636E72] hover:text-[#5A7D7C] transition-all">
+                        <i data-lucide="chevron-right" class="w-6 h-6"></i>
+                    </button>
+                </div>
+            </div>
+          </section>
+
+          <!-- Quiz Tab -->
+          <section id="tab-quiz" class="tab-content hidden p-4">
+            <div class="max-w-3xl mx-auto">
+                <div class="mb-10">
+                    <h2 class="text-3xl font-bold mb-2">Concept Check</h2>
+                    <p class="text-[#636E72]">Test your knowledge with these document-specific questions</p>
+                </div>
+
+                <div id="quiz-container" class="space-y-6">
+                    <!-- Quiz cards will be injected here -->
+                    <div class="bg-white p-12 rounded-[32px] border border-[#EDEDE8] shadow-lg shadow-gray-200/20 text-center">
+                        <i data-lucide="clipboard-list" class="w-12 h-12 text-[#E5E5E0] mx-auto mb-4"></i>
+                        <p class="text-[#636E72]">Upload a PDF to generate a personalized quiz.</p>
+                    </div>
+                </div>
+
+                <div id="quiz-footer" class="mt-12 hidden">
+                    <button id="submit-quiz" class="w-full py-4 bg-[#5A7D7C] text-white rounded-2xl font-bold hover:bg-opacity-90 transition-all shadow-xl shadow-[#5A7D7C]/20">
+                        Check Results
+                    </button>
+                </div>
+            </div>
+          </section>
+
+        </div>
+      </main>
+
+      <!-- Mobile Chat Toggle -->
+      <button id="mobile-chat-toggle" class="md:hidden fixed bottom-6 right-6 w-14 h-14 bg-[#5A7D7C] text-white rounded-full shadow-2xl flex items-center justify-center z-30">
+        <i data-lucide="message-square" class="w-6 h-6"></i>
+      </button>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
+

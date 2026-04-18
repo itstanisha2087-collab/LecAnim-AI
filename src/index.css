@@ -1,0 +1,136 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+@layer base {
+  :root {
+    --bg: #F7F8F3;
+    --sidebar-bg: #FFFFFF;
+    --accent: #5A7D7C;
+    --accent-soft: #E0E7E6;
+    --text-main: #2D3436;
+    --text-sub: #636E72;
+    --card-radius: 16px;
+    --glass: rgba(255, 255, 255, 0.7);
+  }
+
+  * {
+    @apply border-[#EDEDE8];
+  }
+  body {
+    background-color: var(--bg);
+    color: var(--text-main);
+    font-family: var(--font-sans);
+  }
+}
+
+@layer components {
+  .sidebar {
+    background: var(--sidebar-bg);
+    box-shadow: 4px 0 20px rgba(0,0,0,0.02);
+  }
+
+  .section-label {
+    @apply text-[11px] uppercase tracking-[1px] text-[#636E72] mb-3 block;
+  }
+
+  .nav-item {
+    @apply transition-all duration-200 text-[#636E72] font-medium;
+  }
+  
+  .nav-item.active {
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+  
+  .nav-item.active i {
+    color: var(--accent) !important;
+  }
+
+  /* Chat Interface */
+  .chat-container {
+    @apply flex-1 flex flex-col bg-[#FAFBFA] rounded-[16px] p-4 border border-[#EDEDE8];
+  }
+
+  .chat-bubble {
+    @apply bg-white p-3 rounded-[12px] rounded-tl-none shadow-[0_2px_5px_rgba(0,0,0,0.03)] border border-[#F0F0F0] text-[13px] leading-[1.5];
+  }
+
+  .chat-bubble.user {
+    @apply rounded-tl-[12px] rounded-tr-none bg-[#E0E7E6] text-[#5A7D7C] border-none ml-auto;
+  }
+
+  .chat-input {
+    @apply bg-white border border-[#E5E5E0] rounded-[8px] px-3 py-2 text-[13px] text-[#636E72] focus:outline-none focus:ring-1 focus:ring-[#5A7D7C]/30 transition-all;
+  }
+
+  /* Main Stage Elements */
+  .viewport-label {
+    background: var(--glass);
+    backdrop-filter: blur(8px);
+    @apply absolute top-5 left-5 px-4 py-2 rounded-[8px] text-[11px] font-bold border border-white/30;
+  }
+
+  .quiz-preview {
+    background: var(--accent);
+    @apply text-white rounded-[12px] p-4 flex items-center justify-between;
+  }
+
+  /* Flashcard 3D effects */
+  .perspective-1000 {
+    perspective: 1000px;
+  }
+  
+  .preserve-3d {
+    transform-style: preserve-3d;
+  }
+  
+  .backface-hidden {
+    backface-visibility: hidden;
+  }
+  
+  .rotate-y-180 {
+    transform: rotateY(180deg);
+  }
+
+  .flashcard.flipped {
+    transform: rotateY(180deg);
+  }
+
+  /* Quiz option styling */
+  .quiz-option {
+    @apply p-4 border border-[#EDEDE8] bg-white rounded-[12px] text-left transition-all hover:bg-[#FAFBFA] cursor-pointer;
+  }
+
+  .quiz-option.selected {
+    @apply border-[#5A7D7C] bg-[#E0E7E6] text-[#5A7D7C];
+  }
+
+  .quiz-option.correct {
+    @apply border-emerald-500 bg-emerald-50 text-emerald-700;
+  }
+
+  .quiz-option.incorrect {
+    @apply border-red-500 bg-red-50 text-red-700;
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-[#E5E5E0] rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-[#D5D5D0];
+}
